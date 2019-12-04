@@ -1,6 +1,7 @@
 package will.example.currencies;
 
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
@@ -36,5 +37,24 @@ public class MainActivity extends AppCompatActivity {
         mCalcButton = (Button) findViewById(R.id.btn_calc);
         mForSpinner = (Spinner) findViewById(R.id.spn_for);
         mHomeSpinner = (Spinner) findViewById(R.id.spn_hom);
+    }
+
+    public boolean onOptionsItemSelected (MenuItem item) {
+        int id = item.getItemId();
+        switch (id){
+
+            case R.id.mnu_invert:
+                //TODO define behaviour here
+                break;
+
+            case R.id.mnu_codes:
+                //TODO define behaviour here
+                break;
+
+            case R.id.mnu_exit:
+                finish();
+                break;
+        }
+        return true;
     }
 }
