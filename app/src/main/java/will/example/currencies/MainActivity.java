@@ -7,6 +7,8 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -18,7 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     private Button mCalcButton;
     private TextView mConvertedTextView;
@@ -62,6 +64,9 @@ public class MainActivity extends AppCompatActivity {
         //assign adapters to spinners
         mForSpinner.setAdapter(arrayAdapter);
         mHomSpinner.setAdapter(arrayAdapter);
+
+        mHomSpinner.setOnItemSelectedListener(this);
+        mForSpinner.setOnItemSelectedListener(this);
     }
 
     public boolean onOptionsItemSelected (MenuItem item) {
@@ -117,6 +122,16 @@ public class MainActivity extends AppCompatActivity {
         mHomSpinner.setSelection(nFor);
 
         mConvertedTextView.setText("");
+
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
 
     }
 }

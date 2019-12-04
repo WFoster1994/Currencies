@@ -3,7 +3,7 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView xmlns:android=""
+    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@android:id/text1"
         android:background="@color/grey_very_dark"
         android:textColor="@color/grey_light"
