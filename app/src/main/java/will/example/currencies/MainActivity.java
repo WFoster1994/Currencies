@@ -125,6 +125,17 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     }
 
+    private int findPositionGivenCode(String code, String[] currencies) {
+
+        for(int i = 0; i < currencies.length; i++) {
+            if ((currencies[i]).substring(0, 3).equalsIgnoreCase(code)) {
+                return i;
+            }
+        }
+        //default
+        return 0;
+    }
+
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 
