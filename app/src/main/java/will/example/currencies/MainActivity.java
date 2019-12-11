@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.net.wifi.hotspot2.pps.HomeSp;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -91,6 +90,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     HOM), mCurrencies));
         }
 
+        mCalcButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //define behaviour here
+            }
+        });
     }
 
     public boolean onOptionsItemSelected (MenuItem item) {
