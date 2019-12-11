@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.net.wifi.hotspot2.pps.HomeSp;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,6 +28,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private EditText mAmountEditText;
     private Spinner mForSpinner, mHomSpinner;
     private String[] mCurrencies;
+
+    public static final String FOR = "FOR_CURRENCY";
+    public static final String HOM = "HOM_CURRENCY";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +71,26 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         mHomSpinner.setOnItemSelectedListener(this);
         mForSpinner.setOnItemSelectedListener(this);
+
+        //set to shared-preferences or pull from shared-preferences on retart
+        if (savedInstanceState == null
+                &&(PrefsMgr.getString(this, FOR) == null &&
+                PrefsMgr.getString(this, HOM) == null)) {
+
+            mForSpinner.setSelection(findPositionGivenCode("CNY", mCurrencies));
+            mHomSpinner.setSelection(findPositionGivenCode("USD", mCurrencies));
+
+            PrefsMgr.setString(this, FOR, "CNY");
+            PrefsMgr.setString(this, HOM, "USD");
+
+        } else {
+
+            mForSpinner.setSelection(findPositionGivenCode(PrefsMgr.getString(this,
+                    FOR), mCurrencies));
+            mHomSpinner.setSelection(findPositionGivenCode(PrefsMgr.getString(this,
+                    HOM), mCurrencies));
+        }
+
     }
 
     public boolean onOptionsItemSelected (MenuItem item) {
@@ -123,12 +147,17 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         mConvertedTextView.setText("");
 
+        PrefsMgr.setString(this, FOR, extractCodeFromCurrency((String)
+                mForSpinner.getSelectedItem()));
+        PrefsMgr.setString(this, HOM, extractCodeFromCurrency((String)
+                mHomSpinner.getSelectedItem()));
+
     }
 
     private int findPositionGivenCode(String code, String[] currencies) {
 
         for(int i = 0; i < currencies.length; i++) {
-            if ((currencies[i]).substring(0, 3).equalsIgnoreCase(code)) {
+            if (extractCodeFromCurrency(currencies[i]).equalsIgnoreCase(code)) {
                 return i;
             }
         }
@@ -136,9 +165,30 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         return 0;
     }
 
+    private String extractCodeFromCurrency(String currency) {
+        return (currency).substring(0, 3);
+    }
+
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 
+        switch (parent.getId()) {
+
+            case R.id.spn_for:
+                PrefsMgr.setString(this, FOR,
+                        extractCodeFromCurrency((String)mForSpinner.getSelectedItem()));
+                break;
+
+            case R.id.spn_hom:
+                PrefsMgr.setString(this, HOM,
+                    extractCodeFromCurrency((String)mHomSpinner.getSelectedItem()));
+                break;
+
+                default:
+                    break;
+        }
+
+        mConvertedTextView.setText("");
     }
 
     @Override
