@@ -1,11 +1,14 @@
 package will.example.currencies;
 
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,8 +18,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -86,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mHomSpinner.setOnItemSelectedListener(this);
         mForSpinner.setOnItemSelectedListener(this);
 
-        //set to shared-preferences or pull from shared-preferences on retart
+        //set to shared-preferences or pull from shared-preferences on restart
         if (savedInstanceState == null
                 &&(PrefsMgr.getString(this, FOR) == null &&
                 PrefsMgr.getString(this, HOM) == null)) {
@@ -108,7 +115,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mCalcButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //define behaviour here
+                new CurrencyConverterTask().execute(URL_BASE + mKey);
             }
         });
         mKey = getKey("open_key");
@@ -229,5 +236,88 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
 
+    }
+
+    private class CurrencyConverterTask extends AsyncTask<String, Void, JSONObject> {
+
+        private ProgressDialog progressDialog;
+
+        /*Executed on the UI thread prior to do in backgorund. This method requests an opportunity
+        * to modify the UI before do in background. A progress dialog will appear with an option
+        * for the user to select cancel and terminate the operation. */
+        @Override
+        protected void onPreExecute() {
+            progressDialog = new ProgressDialog(MainActivity.this);
+            progressDialog.setTitle("Calculating Result...");
+            progressDialog.setMessage("One Moment Please...");
+            progressDialog.setCancelable(true);
+
+            progressDialog.setButton(DialogInterface.BUTTON_NEGATIVE,
+                    "Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            CurrencyConverterTask.this.cancel(true);
+                            progressDialog.dismiss();
+                        }
+                    });
+            progressDialog.show();
+        }
+
+        /* A proxy for the execute method of AsyncTask. The parameters passed in execute
+        * will in turn be passed to do in background. Inside the body, return new
+        * JSONParser().getJSONFromURL(Params[0]); is called. The getJSONFromURL() method
+        * fetches a JSONObject from a web service. This operation requires communication
+        * between two devices (user's device and webs server) so we place getJSONFromURL
+        * in this method. It will return a JSONObject, which the return value is defined
+        * also in do in background. This method runs on a background thread.*/
+        @Override
+        protected JSONObject doInBackground(String... params) {
+
+            return new JSONParser().getJSONFromURL(params[0]);
+        }
+
+        /* This method is running on the UI thread. The return value is defined
+        * as a JSONObject. By the time this method is reached, the background thread
+        * of do in background has already terminated and the UI can be safely updated
+        * with the JSONObject data fetched from do in background. Finally, we do some
+        * calculations and assign the formatted result to the mConvertedTextView.*/
+        @Override
+        protected void onPostExecute(JSONObject jsonObject) {
+
+            double dCalculated = 0.0;
+            String strForCode =
+                    extractCodeFromCurrency(mCurrencies[mForSpinner.getSelectedItemPosition()]);
+            String strHomCode =
+                    extractCodeFromCurrency(mCurrencies[mHomSpinner.getSelectedItemPosition()]);
+            String strAmount = mAmountEditText.getText().toString();
+
+            try {
+                if (jsonObject == null) {
+                    throw new JSONException("no data available.");
+                }
+                JSONObject jsonRates = jsonObject.getJSONObject(RATES);
+                if (strHomCode.equalsIgnoreCase("USD")){
+                    dCalculated = Double.parseDouble(strAmount) / jsonRates.getDouble(strForCode);
+                }
+                else if (strForCode.equalsIgnoreCase("USD")) {
+                    dCalculated = Double.parseDouble(strAmount) * jsonRates.getDouble(strHomCode);
+                }
+                else {
+                    dCalculated = Double.parseDouble(strAmount) * jsonRates.getDouble(strHomCode) /
+                            jsonRates.getDouble(strForCode);
+                }
+                } catch (JSONException e) {
+                Toast.makeText(
+                        MainActivity.this,
+                        "There's been a JSON exception: " + e.getMessage(),
+                        Toast.LENGTH_LONG).show();
+                mConvertedTextView.setText("");
+                e.printStackTrace();
+                mConvertedTextView.setText(DECIMAL_FORMAT.format(dCalculated) + "" + strHomCode);
+                progressDialog.dismiss();
+
+            }
+
+        }
     }
 }
